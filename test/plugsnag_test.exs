@@ -89,7 +89,7 @@ defmodule PlugsnagTest do
     defmodule TestErrorReportBuilderOverride do
       @behaviour Plugsnag.ErrorReportBuilder
 
-      def build_error_report(error_report, conn, exception) do
+      def build_error_report(error_report, conn, exception, _stack) do
         user_info =  %{
           id: conn |> get_req_header("x-user-id") |> List.first
         }
@@ -104,18 +104,16 @@ defmodule PlugsnagTest do
       use Plugsnag, error_report_builder: TestErrorReportBuilderOverride
       use ErrorRaisingPlug
 
-      defp build_options(error_report_builder, conn, exception) do
+      defp build_options(error_report_builder, conn, exception, stack) do
         %Plugsnag.ErrorReport{}
-        |> error_report_builder.build_error_report(conn, exception)
+        |> error_report_builder.build_error_report(conn, exception, stack)
         |> Map.delete(:__struct__)
         |> Keyword.new
       end
     end
 
-    conn = conn(:get, "/")
-
     conn =
-      conn
+      conn(:get, "/")
       |> put_req_header("x-user-id", "abc123")
 
     catch_error TestPlugsnagCallbackPlugOverride.call(conn, [])

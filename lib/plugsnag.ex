@@ -16,7 +16,7 @@ defmodule Plugsnag do
         end
       end
 
-      defp handle_errors(conn, %{reason: exception}) do
+      defp handle_errors(conn, %{reason: exception, stack: stack}) do
         error_report_builder = unquote(
           Keyword.get(
             options,
@@ -25,17 +25,17 @@ defmodule Plugsnag do
           )
         )
 
-        options = build_options(error_report_builder, conn, exception)
+        options = build_options(error_report_builder, conn, exception, stack)
         apply(reporter(), :report, [exception | [options]])
       end
 
-      defp build_options(error_report_builder, conn, _exception) do
+      defp build_options(error_report_builder, conn, _exception, _stack) do
           %Plugsnag.ErrorReport{}
           |> error_report_builder.build_error_report(conn)
           |> Map.delete(:__struct__)
           |> Keyword.new
       end
-      defoverridable [build_options: 3]
+      defoverridable [build_options: 4]
     end
   end
 
